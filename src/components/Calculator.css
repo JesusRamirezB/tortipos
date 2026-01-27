@@ -1,0 +1,283 @@
+/* ===============================
+   FULLSCREEN WRAPPER
+================================ */
+
+.calculator-fullscreen {
+    width: 100vw;
+    height: 100vh;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow: hidden;
+}
+
+/* ===============================
+   MAIN GRID (4 ROWS)
+================================ */
+
+.calculator-container {
+    width: 100%;
+    max-width: 900px;
+    height: 100%;
+    max-height: 100vh;
+
+    display: grid;
+    grid-template-rows:
+        auto
+        /* header (back + title) */
+        auto
+        /* mode toggle */
+        1fr
+        /* display + numpad */
+        auto;
+    /* actions */
+
+    gap: 1rem;
+    min-height: 0;
+}
+
+/* ===============================
+   HEADER ROW (ROW 1)
+================================ */
+
+.calculator-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+}
+
+.back-btn {
+    background: white;
+    color: var(--color-primary);
+    border: 3px solid var(--color-primary);
+    padding: 0.75rem 1.25rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.back-btn:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateX(-3px);
+}
+
+.calculator-title {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    text-align: center;
+    margin: 0;
+}
+
+/* spacer keeps title centered */
+.calculator-header::after {
+    content: "";
+}
+
+/* ===============================
+   MODE TOGGLE (ROW 2)
+================================ */
+
+.mode-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    background: white;
+    padding: 0.5rem;
+    border-radius: 16px;
+    box-shadow: var(--shadow-md);
+}
+
+.mode-btn {
+    padding: 1.2rem;
+    border-radius: 12px;
+    font-size: 1.4rem;
+    font-weight: 600;
+    background: transparent;
+    color: var(--color-text-light);
+    border: 2px solid transparent;
+    transition: var(--transition);
+}
+
+.mode-btn.active {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary-dark);
+    box-shadow: var(--shadow-md);
+}
+
+.mode-btn:not(.active):hover {
+    background: var(--color-bg);
+}
+
+/* ===============================
+   MAIN CONTENT (ROW 3)
+================================ */
+
+.calculator-main {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+    min-height: 0;
+}
+
+/* ===============================
+   DISPLAY
+================================ */
+
+.calculator-display-box {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: var(--shadow-lg);
+    border: 3px solid var(--color-accent);
+    text-align: center;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    height: 100%;
+    max-height: 100%;
+    min-height: 0;
+    overflow: hidden;
+
+}
+
+.display-label {
+    font-size: 1.2rem;
+    color: var(--color-text-light);
+    margin-bottom: 0.75rem;
+    font-weight: 500;
+}
+
+.display-main {
+  height: 5.5rem;
+  padding: 0.25rem 0.5rem;
+
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+
+  display: block;
+  text-align: center;
+
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.15;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.display-conversion {
+    font-size: clamp(1.6rem, 3vw, 2rem);
+    color: var(--color-accent);
+    font-weight: 600;
+    margin-top: 0.5rem;
+}
+
+/* ===============================
+   NUMPAD
+================================ */
+
+.calculator-numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    background: white;
+    padding: 1rem;
+    border-radius: 20px;
+    box-shadow: var(--shadow-md);
+    min-height: 0;
+}
+
+.num-btn {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border: 3px solid var(--color-border);
+    border-radius: 16px;
+    font-size: clamp(1.8rem, 3vw, 2.4rem);
+    font-weight: 700;
+    color: var(--color-primary-dark);
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.num-btn:hover {
+    background: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary-dark);
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.num-btn:active {
+    transform: scale(0.97);
+}
+
+.num-btn.special {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    color: var(--color-secondary);
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+}
+
+/* ===============================
+   ACTIONS (ROW 4)
+================================ */
+
+.calculator-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+}
+
+.action-btn {
+    padding: 1.5rem;
+    border-radius: 16px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    transition: var(--transition);
+    box-shadow: var(--shadow-md);
+}
+
+/* clear */
+
+.clear-btn {
+    background: white;
+    color: var(--color-secondary);
+    border: 3px solid var(--color-secondary);
+}
+
+.clear-btn:hover {
+    background: var(--color-secondary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* add */
+
+.add-btn {
+    background: linear-gradient(135deg, var(--color-success) 0%, #20863a 100%);
+    color: white;
+    border: 3px solid #20863a;
+}
+
+.add-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+.add-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.add-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
