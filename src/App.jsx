@@ -1,210 +1,134 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { supabase } from './lib/supabase'
+import { queueSale } from './lib/offlineQueue'
+import { useProducts } from './hooks/useProducts'
+import { useCart } from './hooks/useCart'
+import { useCalculator } from './hooks/useCalculator'
+import { useToast } from './hooks/useToast'
+import { useOfflineSync } from './hooks/useOfflineSync'
 import Calculator from './components/Calculator'
 import Cart from './components/Cart'
 import ProductGrid from './components/ProductGrid'
+import ToastContainer from './components/Toast'
 import './App.css'
 
 function App() {
-    const [products, setProducts] = useState([])
-    const [cart, setCart] = useState([])
-    const [tortillaProduct, setTortillaProduct] = useState(null)
-    const [showCalculator, setShowCalculator] = useState(false)
-    const [calculatorValue, setCalculatorValue] = useState('')
-    const [calculatorMode, setCalculatorMode] = useState('pesos') // 'pesos' or 'kg'
-    const [loading, setLoading] = useState(true)
+  const { products, tortillaProduct, loading } = useProducts()
+  const { cart, addToCart, updateQuantity, removeItem, clearCart, total } = useCart()
+  const calculator = useCalculator(tortillaProduct, addToCart)
+  const { toasts, showToast, removeToast } = useToast()
+  const [checkingOut, setCheckingOut] = useState(false)
+  const { pendingCount, refreshCount } = useOfflineSync(showToast)
 
-    useEffect(() => {
-        loadProducts()
-    }, [])
+  const handleProductClick = (product) => {
+    if (product.type === 'weighted') {
+      calculator.open()
+    } else {
+      addToCart(product)
+    }
+  }
 
-    const loadProducts = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                .eq('active', true)
-                .order('name')
+  const handleCheckout = async () => {
+    if (cart.length === 0 || checkingOut) return
 
-            if (error) throw error
-            // setProducts(data || [])
+    setCheckingOut(true)
 
-            // Find tortillas product
-            // const tortilla = data?.find(p => p.type === 'weighted')
-            // setTortillaProduct(tortilla)
-
-            const weightedProducts = data.filter(p => p.type === 'weighted')
-            const otherProducts = data.filter(p => p.type !== 'weighted')
-
-            const orderedProducts = [...weightedProducts, ...otherProducts]
-
-            setProducts(orderedProducts)
-            setTortillaProduct(weightedProducts[0])
-        } catch (error) {
-            console.error('Error loading products:', error)
-        } finally {
-            setLoading(false)
-        }
+    const saleData = {
+      local_id: `SALE-${Date.now()}`,
+      description: 'Venta POS',
+      total_amount: total,
+      device_id: import.meta.env.VITE_DEVICE_ID || 'DEFAULT-DEVICE',
+      created_at: new Date().toISOString(),
     }
 
-    const handleProductClick = (product) => {
-        if (product.type === 'weighted') {
-            setShowCalculator(true)
-            setCalculatorValue('')
-            setCalculatorMode('pesos')
-        } else {
-            addToCart(product)
-        }
+    const cartItems = cart.map((item) => ({
+      product_id: item.product_id,
+      product_name: item.product_name,
+      quantity: item.quantity,
+      weight_kg: item.weight_kg,
+      price_paid: item.price_paid,
+    }))
+
+    try {
+      const { data: sale, error: saleError } = await supabase
+        .from('sales')
+        .insert(saleData)
+        .select()
+        .single()
+
+      if (saleError) throw saleError
+
+      const saleItems = cartItems.map((item) => ({
+        ...item,
+        sale_id: sale.id,
+      }))
+
+      const { error: itemsError } = await supabase.from('sale_items').insert(saleItems)
+
+      if (itemsError) throw itemsError
+
+      showToast(`Venta registrada: $${total.toFixed(2)}`, 'success')
+      clearCart()
+    } catch (error) {
+      console.error('Error en checkout:', error)
+      try {
+        await queueSale(saleData, cartItems)
+        await refreshCount()
+        showToast('Sin conexión — venta guardada localmente', 'info')
+        clearCart()
+      } catch (queueError) {
+        console.error('Error queuing sale:', queueError)
+        showToast('Error al procesar la venta', 'error')
+      }
+    } finally {
+      setCheckingOut(false)
     }
+  }
 
-    const addToCart = (product, customPrice = null, weight = null) => {
-        const newItem = {
-            id: Date.now(),
-            product_id: product.id,
-            product_name: product.name,
-            quantity: product.type === 'unit' ? 1 : null,
-            weight_kg: weight,
-            price_paid: customPrice || product.price,
-            product: product
-        }
-        setCart([...cart, newItem])
-    }
-
-    const handleCalculatorAdd = () => {
-        if (!tortillaProduct || !calculatorValue) return
-
-        const value = parseFloat(calculatorValue)
-        if (value <= 0) return
-
-        if (calculatorMode === 'pesos') {
-            // Customer said "$10 pesos of tortillas"
-            const weight = value / tortillaProduct.price
-            addToCart(tortillaProduct, value, weight)
-        } else {
-            // Customer said "1 kg of tortillas"
-            const price = value * tortillaProduct.price
-            addToCart(tortillaProduct, price, value)
-        }
-
-        setShowCalculator(false)
-        setCalculatorValue('')
-    }
-
-    const updateCartItemQuantity = (itemId, delta) => {
-        const newCart = cart.map(item => {
-            if (item.id === itemId && item.quantity) {
-                const newQuantity = Math.max(0, item.quantity + delta)
-                if (newQuantity === 0) return null
-                return {
-                    ...item,
-                    quantity: newQuantity,
-                    price_paid: item.product.price * newQuantity
-                }
-            }
-            return item
-        }).filter(Boolean)
-        setCart(newCart)
-    }
-
-    const removeCartItem = (itemId) => {
-        setCart(cart.filter(item => item.id !== itemId))
-    }
-
-    const clearCart = () => {
-        setCart([])
-    }
-
-    const getTotalAmount = () => {
-        return cart.reduce((sum, item) => sum + item.price_paid, 0)
-    }
-
-    const handleCheckout = async () => {
-        if (cart.length === 0) return
-
-        try {
-            const saleData = {
-                local_id: `SALE-${Date.now()}`,
-                description: 'Venta POS',
-                total_amount: getTotalAmount(),
-                device_id: 'TABLET-001',
-                created_at: new Date().toISOString()
-            }
-
-            const { data: sale, error: saleError } = await supabase
-                .from('sales')
-                .insert(saleData)
-                .select()
-                .single()
-
-            if (saleError) throw saleError
-
-            const saleItems = cart.map(item => ({
-                sale_id: sale.id,
-                product_id: item.product_id,
-                product_name: item.product_name,
-                quantity: item.quantity,
-                weight_kg: item.weight_kg,
-                price_paid: item.price_paid
-            }))
-
-            const { error: itemsError } = await supabase
-                .from('sale_items')
-                .insert(saleItems)
-
-            if (itemsError) throw itemsError
-
-            alert(`✅ Venta registrada: $${getTotalAmount().toFixed(2)}`)
-            clearCart()
-        } catch (error) {
-            console.error('Error en checkout:', error)
-            alert('❌ Error al procesar la venta')
-        }
-    }
-
-    if (loading) {
-        return (
-            <div className="loading">
-                <div className="spinner"></div>
-                <p>Cargando...</p>
-            </div>
-        )
-    }
-
+  if (loading) {
     return (
-        <div className="app">
-            {showCalculator ? (
-                <Calculator
-                    tortillaProduct={tortillaProduct}
-                    calculatorValue={calculatorValue}
-                    setCalculatorValue={setCalculatorValue}
-                    calculatorMode={calculatorMode}
-                    setCalculatorMode={setCalculatorMode}
-                    onAdd={handleCalculatorAdd}
-                    onCancel={() => setShowCalculator(false)}
-                />
-            ) : (
-                <>
-                    <div className="products-section">
-                        <ProductGrid
-                            products={products}
-                            onProductClick={handleProductClick}
-                        />
-                    </div>
-
-                    <div className="cart-section">
-                        <Cart
-                            cart={cart}
-                            totalAmount={getTotalAmount()}
-                            onUpdateQuantity={updateCartItemQuantity}
-                            onRemoveItem={removeCartItem}
-                            onCheckout={handleCheckout}
-                            onClear={clearCart}
-                        />
-                    </div>
-                </>
-            )}
-        </div>
+      <div className="loading">
+        <div className="spinner"></div>
+        <p>Cargando...</p>
+      </div>
     )
+  }
+
+  return (
+    <div className="app">
+      <ToastContainer toasts={toasts} onDismiss={removeToast} />
+      {calculator.show ? (
+        <Calculator
+          tortillaProduct={tortillaProduct}
+          calculatorValue={calculator.value}
+          setCalculatorValue={calculator.setValue}
+          calculatorMode={calculator.mode}
+          setCalculatorMode={calculator.setMode}
+          onAdd={calculator.handleAdd}
+          onCancel={calculator.close}
+        />
+      ) : (
+        <>
+          <div className="products-section">
+            <ProductGrid products={products} onProductClick={handleProductClick} />
+          </div>
+
+          <div className="cart-section">
+            <Cart
+              cart={cart}
+              totalAmount={total}
+              onUpdateQuantity={updateQuantity}
+              onRemoveItem={removeItem}
+              onCheckout={handleCheckout}
+              onClear={clearCart}
+              checkingOut={checkingOut}
+              pendingCount={pendingCount}
+            />
+          </div>
+        </>
+      )}
+    </div>
+  )
 }
 
 export default App

@@ -1,21 +1,6 @@
 import './ProductGrid.css'
 
 function ProductGrid({ products, onProductClick }) {
-  const getProductEmoji = (name) => {
-    const emojiMap = {
-      'Tortillas': '🫓',
-      'Chile con Costilla': '🍲',
-      'Chile con Huevo': '🍳',
-      'Nopales': '🌵',
-      'Frijoles Fritos': '🫘',
-      'Frijoles de la Olla': '🫘',
-      'Huevo': '🥚',
-      'Refrescos': '🥤',
-      'Botanas': '🥔'
-    }
-    return emojiMap[name] || '🍽️'
-  }
-
   const getProductColor = (index) => {
     const colors = [
       '#2d5a7b',
@@ -31,6 +16,13 @@ function ProductGrid({ products, onProductClick }) {
     return colors[index % colors.length]
   }
 
+  const getImageSrc = (product) => {
+    if (product.image_url) {
+        return `/images/${product.image_url}`
+    }
+    return null
+  }
+
   return (
     <div className="product-grid-container">
       {products.map((product, index) => (
@@ -40,7 +32,17 @@ function ProductGrid({ products, onProductClick }) {
           onClick={() => onProductClick(product)}
           style={{ '--product-color': getProductColor(index) }}
         >
-          <div className="product-emoji-large">{getProductEmoji(product.name)}</div>
+          <div className="product-image-wrapper">
+            {getImageSrc(product) ? (
+              <img
+                src={getImageSrc(product)}
+                alt={product.name}
+                className="product-image"
+              />
+            ) : (
+              <div className="product-image-placeholder" />
+            )}
+          </div>
           <div className="product-info-large">
             <h3 className="product-name-large">{product.name}</h3>
             <div className="product-price-large mono">

@@ -12,16 +12,16 @@
   --color-text-light: #6c757d;
   --color-border: #dee2e6;
   --color-success: #28a745;
-  
+
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
-  
+
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  
-  --transition: all 0.2s ease;
+
+  --transition-speed: 0.2s ease;
 }
 
 * {
@@ -32,7 +32,12 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: var(--color-bg);
@@ -53,7 +58,12 @@ button {
   cursor: pointer;
   border: none;
   outline: none;
-  transition: var(--transition);
+  transition:
+    background-color var(--transition-speed),
+    color var(--transition-speed),
+    transform var(--transition-speed),
+    box-shadow var(--transition-speed),
+    opacity var(--transition-speed);
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
   user-select: none;

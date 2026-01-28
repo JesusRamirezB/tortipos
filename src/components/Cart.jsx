@@ -1,10 +1,24 @@
 import './Cart.css'
 
-function Cart({ cart, totalAmount, onUpdateQuantity, onRemoveItem, onCheckout, onClear }) {
+function Cart({
+  cart,
+  totalAmount,
+  onUpdateQuantity,
+  onRemoveItem,
+  onCheckout,
+  onClear,
+  checkingOut,
+  pendingCount,
+}) {
   return (
     <div className="cart-container">
       <div className="cart-header">
         <h2>🛒 Carrito</h2>
+        {pendingCount > 0 && (
+          <span className="pending-badge">
+            {pendingCount} pendiente{pendingCount > 1 ? 's' : ''}
+          </span>
+        )}
         {cart.length > 0 && (
           <button className="clear-cart-btn" onClick={onClear}>
             Limpiar
@@ -35,7 +49,7 @@ function Cart({ cart, totalAmount, onUpdateQuantity, onRemoveItem, onCheckout, o
                 </div>
                 <div className="item-price mono">${item.price_paid.toFixed(2)}</div>
               </div>
-              
+
               <div className="item-controls">
                 {item.quantity && (
                   <div className="quantity-controls">
@@ -53,10 +67,7 @@ function Cart({ cart, totalAmount, onUpdateQuantity, onRemoveItem, onCheckout, o
                     </button>
                   </div>
                 )}
-                <button
-                  className="delete-btn"
-                  onClick={() => onRemoveItem(item.id)}
-                >
+                <button className="delete-btn" onClick={() => onRemoveItem(item.id)}>
                   🗑️ Eliminar
                 </button>
               </div>
@@ -72,8 +83,8 @@ function Cart({ cart, totalAmount, onUpdateQuantity, onRemoveItem, onCheckout, o
             <span className="total-value mono">${totalAmount.toFixed(2)}</span>
           </div>
 
-          <button className="checkout-btn" onClick={onCheckout}>
-            💳 COBRAR
+          <button className="checkout-btn" onClick={onCheckout} disabled={checkingOut}>
+            {checkingOut ? '⏳ Procesando...' : '💳 COBRAR'}
           </button>
         </div>
       )}
