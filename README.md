@@ -4,12 +4,13 @@ Sistema de punto de venta optimizado para tablets, diseñado para ser simple y f
 
 ## Características
 
-- 🛒 **Interfaz Simple**: Diseñada específicamente para tablets con pantalla completa
-- 🫓 **Calculadora de Tortillas**: Sistema dedicado para vender tortillas por pesos o kilos
-- 👆 **Botones Grandes**: Touch-friendly, fácil de tocar sin errores
-- 📱 **Pantalla Completa**: 100vw x 100vh - uso exclusivo en tablet
-- 💰 **Carrito Visual**: Muestra claramente los productos y el total
-- ⚡ **Rápido y Simple**: Mínima curva de aprendizaje
+- **Interfaz Simple**: Diseñada específicamente para tablets con pantalla completa
+- **Calculadora de Tortillas**: Sistema dedicado para vender tortillas por pesos o kilos
+- **Botones Grandes**: Touch-friendly, fácil de tocar sin errores
+- **Pantalla Completa**: 100vw x 100vh - uso exclusivo en tablet
+- **Carrito Visual**: Muestra claramente los productos y el total
+- **Modo Offline**: Las ventas se guardan localmente y se sincronizan automáticamente
+- **Notificaciones Toast**: Feedback visual para confirmaciones y errores
 
 ## Flujo de Trabajo
 
@@ -22,16 +23,18 @@ Sistema de punto de venta optimizado para tablets, diseñado para ser simple y f
 1. Cliente dice: **"10 pesos de tortillas"** o **"1 kilo de tortillas"**
 2. Empleado toca **Tortillas** en la pantalla
 3. Aparece la calculadora
-4. Empleado selecciona modo: **💵 Pesos** o **⚖️ Kilos**
+4. Empleado selecciona modo: **Pesos** o **Kilos**
 5. Ingresa la cantidad usando el teclado numérico
 6. Toca **Agregar al Carrito**
 
 ## Tech Stack
 
-- React 18 + Vite
-- Supabase (PostgreSQL)
-- CSS optimizado para tablets
-- Fuentes: Inter + JetBrains Mono
+- **Frontend**: React 18 + Vite
+- **Base de Datos**: Supabase (PostgreSQL)
+- **Almacenamiento Offline**: IndexedDB
+- **Testing**: Vitest + Testing Library
+- **Linting**: ESLint + Prettier
+- **Fuentes**: Inter (UI) + JetBrains Mono (precios)
 
 ## Instalación Rápida
 
@@ -93,11 +96,12 @@ INSERT INTO products (name, type, price, active) VALUES
 
 ### 2. Configurar Variables de Entorno
 
-Crea un archivo `.env`:
+Copia `.env.example` a `.env` y configura tus credenciales:
 
 ```
 VITE_SUPABASE_URL=tu_url_de_supabase
 VITE_SUPABASE_ANON_KEY=tu_clave_anonima
+VITE_DEVICE_ID=identificador_dispositivo   # Opcional, para identificar tablets
 ```
 
 ### 3. Instalar y Ejecutar
@@ -105,6 +109,17 @@ VITE_SUPABASE_ANON_KEY=tu_clave_anonima
 ```bash
 npm install
 npm run dev
+```
+
+## Scripts Disponibles
+
+```bash
+npm run dev        # Inicia servidor de desarrollo (puerto 3000)
+npm run build      # Compila para producción (salida en dist/)
+npm run preview    # Vista previa del build de producción
+npm run lint       # Ejecuta ESLint
+npm run format     # Formatea código con Prettier
+npm run test       # Ejecuta tests con Vitest
 ```
 
 ## Diseño para Tablet
@@ -117,11 +132,11 @@ npm run dev
 
 ## Simplificaciones para Usuarios No Técnicos
 
-✅ **Solo números en calculadora** - Sin operadores confusos  
-✅ **Botones grandes y claros** - Difícil equivocarse  
-✅ **Un solo propósito** - Vender productos, nada más  
-✅ **Feedback visual** - El usuario siempre sabe qué está pasando  
-✅ **Confirmaciones claras** - Mensajes simples y directos  
+- **Solo números en calculadora** - Sin operadores confusos
+- **Botones grandes y claros** - Difícil equivocarse
+- **Un solo propósito** - Vender productos, nada más
+- **Feedback visual** - El usuario siempre sabe qué está pasando
+- **Confirmaciones claras** - Mensajes simples y directos  
 
 ## Estructura del Proyecto
 
@@ -129,15 +144,34 @@ npm run dev
 pos-app/
 ├── src/
 │   ├── components/
-│   │   ├── Calculator.jsx      # Calculadora de tortillas
-│   │   ├── Cart.jsx             # Carrito de compras
-│   │   └── ProductGrid.jsx      # Grid de productos
+│   │   ├── Calculator.jsx       # Calculadora de tortillas (peso/kilo)
+│   │   ├── Cart.jsx             # Carrito de compras y checkout
+│   │   ├── ProductGrid.jsx      # Grid de productos
+│   │   ├── Toast.jsx            # Sistema de notificaciones
+│   │   ├── ErrorBoundary.jsx    # Manejo de errores React
+│   │   └── *.css                # Estilos de componentes
+│   ├── hooks/
+│   │   ├── useCalculator.js     # Lógica de calculadora
+│   │   ├── useCart.js           # Manejo del carrito
+│   │   ├── useProducts.js       # Carga productos desde Supabase
+│   │   ├── useToast.js          # Manejo de notificaciones
+│   │   └── useOfflineSync.js    # Sincronización offline
 │   ├── lib/
-│   │   └── supabase.js          # Cliente Supabase
+│   │   ├── supabase.js          # Cliente Supabase
+│   │   └── offlineQueue.js      # Cola IndexedDB para modo offline
+│   ├── config/
+│   │   └── productEmojis.js     # Configuración de imágenes/emojis
+│   ├── test/
+│   │   └── setup.js             # Configuración de Vitest
 │   ├── App.jsx                  # Componente principal
-│   └── index.css                # Estilos globales
+│   ├── App.css                  # Estilos del layout principal
+│   └── index.css                # Estilos globales y variables CSS
+├── public/
+│   └── images/                  # Imágenes de productos
 ├── index.html
 ├── vite.config.js
+├── eslint.config.js
+├── .prettierrc
 └── package.json
 ```
 
@@ -167,13 +201,22 @@ Edita las variables en `src/index.css`:
 }
 ```
 
+## Modo Offline
+
+El sistema soporta operación sin conexión a internet:
+
+- Las ventas se guardan primero en IndexedDB (almacenamiento local)
+- Cuando hay conexión, se sincronizan automáticamente con Supabase
+- El carrito muestra un contador de ventas pendientes por sincronizar
+- Notificaciones informan cuando se pierde o recupera la conexión
+
 ## Consejos de Uso
 
 1. **Mantén la tablet cargada** - Conecta a la corriente durante uso
 2. **Limpia la pantalla** - Una pantalla limpia es más fácil de usar
 3. **Modo kiosco** - Considera usar el modo kiosco del navegador
-4. **WiFi estable** - Necesario para sincronizar con Supabase
-5. **Backup offline** - Las ventas se guardan localmente primero
+4. **WiFi estable** - Recomendado, aunque funciona offline
+5. **Múltiples dispositivos** - Usa VITE_DEVICE_ID para identificar cada tablet
 
 ## Soporte
 
