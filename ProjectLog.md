@@ -72,7 +72,7 @@ At this point, the project was intended to be used in a real environment: **my m
 
 Internet connectivity there is unreliable, which led to a discussion with Claude about offline-first approaches. It suggested using a **local offline database** that would sync with Supabase whenever a connection was available.
 
-I had no prior experience with **InnoDB**, but Claude handled the initial setup and logic without major issues, and I integrated it into the project.
+I had no prior experience with **IndexedDB**, but Claude handled the initial setup and logic without major issues, and I integrated it into the project.
 
 ## Refactor & structure improvements
 
@@ -97,6 +97,25 @@ Finally, I focused on visual improvements:
 
 There were some path-related issues when loading images, which I also resolved manually.
 
+## Testing infrastructure
+
+To ensure stability, I added unit tests using **Vitest** and **Testing Library**:
+
+- `useCart.test.js` – Tests for cart operations (add, remove, update quantity, clear)
+- `useCalculator.test.js` – Tests for the tortilla calculator logic
+- `offlineQueue.test.js` – Tests for IndexedDB queue operations (uses `fake-indexeddb` for mocking)
+
+Claude helped set up the initial test configuration, but I wrote additional test cases manually to cover edge cases I encountered during debugging.
+
+## Additional features
+
+Some features that emerged during development:
+
+- **Toast notifications** – Visual feedback system for sale confirmations, errors, and offline status
+- **Error boundary** – Graceful error handling to prevent the app from crashing completely
+- **Multi-device tracking** – Each tablet can have a unique `DEVICE_ID` to track which device made each sale
+- **Cart animations** – Glow effect and auto-scroll when items are added, improving UX feedback
+
 ## Final thoughts
 
 This project ended up being:
@@ -106,3 +125,5 @@ This project ended up being:
 - A practical example of how I use AI tools as **assistants, not replacements**
 
 AI helped accelerate certain parts of development, but a significant portion of the work involved manual fixes, judgment calls, and adapting the project to real-world constraints.
+
+The project name **Tortipos** (Tortillería + POS) reflects its origin as a solution for my mom's tortillería business.
