@@ -14,7 +14,7 @@ import './App.css'
 
 function App() {
   const { products, tortillaProduct, loading } = useProducts()
-  const { cart, addToCart, updateQuantity, removeItem, clearCart, total } = useCart()
+  const { cart, addToCart, updateQuantity, removeItem, clearCart, total, lastAddedId } = useCart()
   const calculator = useCalculator(tortillaProduct, addToCart)
   const { toasts, showToast, removeToast } = useToast()
   const [checkingOut, setCheckingOut] = useState(false)
@@ -123,6 +123,7 @@ function App() {
               onClear={clearCart}
               checkingOut={checkingOut}
               pendingCount={pendingCount}
+              lastAddedId={lastAddedId}
             />
           </div>
         </>

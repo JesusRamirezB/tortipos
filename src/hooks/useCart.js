@@ -2,11 +2,13 @@ import { useState, useCallback, useRef } from 'react'
 
 export function useCart() {
   const [cart, setCart] = useState([])
+  const [lastAddedId, setLastAddedId] = useState(null)
   const nextId = useRef(0)
 
   const addToCart = useCallback((product, customPrice = null, weight = null) => {
+    const newId = ++nextId.current
     const newItem = {
-      id: ++nextId.current,
+      id: newId,
       product_id: product.id,
       product_name: product.name,
       quantity: product.type === 'unit' ? 1 : null,
@@ -15,6 +17,7 @@ export function useCart() {
       product: product,
     }
     setCart((prev) => [...prev, newItem])
+    setLastAddedId(newId)
   }, [])
 
   const updateQuantity = useCallback((itemId, delta) => {
@@ -42,9 +45,10 @@ export function useCart() {
 
   const clearCart = useCallback(() => {
     setCart([])
+    setLastAddedId(null)
   }, [])
 
   const total = cart.reduce((sum, item) => sum + item.price_paid, 0)
 
-  return { cart, addToCart, updateQuantity, removeItem, clearCart, total }
+  return { cart, addToCart, updateQuantity, removeItem, clearCart, total, lastAddedId }
 }
