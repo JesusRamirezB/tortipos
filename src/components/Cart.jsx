@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import './Cart.css'
 
 function Cart({
@@ -9,7 +10,18 @@ function Cart({
   onClear,
   checkingOut,
   pendingCount,
+  lastAddedId,
 }) {
+  const itemRefs = useRef({})
+
+  useEffect(() => {
+    if (lastAddedId && itemRefs.current[lastAddedId]) {
+      itemRefs.current[lastAddedId].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      })
+    }
+  }, [lastAddedId])
   return (
     <div className="cart-container">
       <div className="cart-header">
@@ -35,7 +47,11 @@ function Cart({
           </div>
         ) : (
           cart.map((item) => (
-            <div key={item.id} className="cart-item-card">
+            <div
+              key={item.id}
+              ref={(el) => (itemRefs.current[item.id] = el)}
+              className={`cart-item-card ${item.id === lastAddedId ? 'newly-added' : ''}`}
+            >
               <div className="item-main">
                 <div className="item-name-section">
                   <div className="item-name">{item.product_name}</div>
